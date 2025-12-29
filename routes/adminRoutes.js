@@ -1,6 +1,6 @@
 import express from "express";
 import Issue from "../models/Issue.js";
-import protect from "../middleware/AuthMiddleware.js";
+import protect from "../middleware/authMiddleware.js";
 import adminOnly from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
@@ -28,3 +28,4 @@ router.put("/issues/:id", protect, adminOnly, async (req, res) => {
 });
 
 export default router;   // ✅ THIS LINE WAS MISSING
+
