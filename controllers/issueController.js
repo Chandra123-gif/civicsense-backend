@@ -1,7 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
 import fs from "fs";
-import Issue from "../models/Issue.js";
+import Issue from "../models/issue.js";
 
 export const createIssue = async (req, res) => {
   try {
@@ -48,3 +48,4 @@ export const myIssues = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
