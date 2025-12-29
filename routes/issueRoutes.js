@@ -1,4 +1,5 @@
 import express from "express";
+import { createIssue } from "../controllers/issueController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import upload from "../middleware/uploadMiddleware.js";
 
@@ -12,3 +13,4 @@ router.post(
 );
 
 export default router;
+
