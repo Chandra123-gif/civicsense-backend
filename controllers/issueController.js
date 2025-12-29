@@ -3,6 +3,7 @@ import FormData from "form-data";
 import fs from "fs";
 import Issue from "../models/issue.js";
 
+
 export const createIssue = async (req, res) => {
   try {
     if (!req.file) {
@@ -21,23 +22,6 @@ export const createIssue = async (req, res) => {
       { headers: formData.getHeaders() }
     );
 
-    const { issueType, confidence } = aiResponse.data;
-
-    const issue = await Issue.create({
-      description,
-      category: issueType,
-      confidence,
-image: `/uploads/${req.file.filename}`,
-      user: req.user.id,
-    });
-
-    res.status(201).json(issue);
-  } catch (error) {
-    console.error("AI ERROR:", error.message);
-    res.status(500).json({ message: "AI detection failed" });
-  }
-};
-
 export const myIssues = async (req, res) => {
   try {
     const issues = await Issue.find({ user: req.user.id }).sort({
@@ -48,4 +32,5 @@ export const myIssues = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
