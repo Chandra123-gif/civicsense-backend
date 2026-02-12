@@ -42,9 +42,11 @@ app.use("/api/issues", require("./routes/issueRoutes"));
 // ======================
 // ROOT ROUTE (homepage)
 // ======================
+// Root route
 app.get("/", (req, res) => {
   res.send("🚀 CivicSense Backend is running successfully");
 });
+
 
 
 // ======================
