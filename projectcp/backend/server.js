@@ -1,83 +1,127 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
-
-// Load environment variables from backend/.env explicitly
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Database connection
+// ======================
+// MIDDLEWARE
+// ======================
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+
+// ======================
+// DATABASE CONNECTION
+// ======================
 if (!process.env.MONGODB_URI) {
-  console.error('MONGODB_URI not set. Check backend/.env');
+  console.error("❌ MONGODB_URI not set in environment variables");
 } else {
-  mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.error("❌ MongoDB connection error:", err));
 }
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/issues', require('./routes/issueRoutes'));
 
-// Ensure uploads folder exists and serve it statically
-const uploadsDir = path.join(__dirname, 'uploads');
+// ======================
+// ROUTES
+// ======================
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/issues", require("./routes/issueRoutes"));
+
+
+// ======================
+// ROOT ROUTE (homepage)
+// ======================
+app.get("/", (req, res) => {
+  res.send("🚀 CivicSense Backend is running successfully");
+});
+
+
+// ======================
+// HEALTH CHECK
+// ======================
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running",
+    time: new Date()
+  });
+});
+
+
+// ======================
+// UPLOADS STATIC FOLDER
+// ======================
+const uploadsDir = path.join(__dirname, "uploads");
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
-app.use('/uploads', express.static(uploadsDir));
 
-// Cleanup helper: remove files older than `maxAgeDays` from uploads
+app.use("/uploads", express.static(uploadsDir));
+
+
+// ======================
+// CLEAN OLD UPLOAD FILES
+// ======================
 function cleanupUploads(maxAgeDays = 30) {
   try {
     const files = fs.readdirSync(uploadsDir);
     const now = Date.now();
     const maxAge = maxAgeDays * 24 * 60 * 60 * 1000;
-    files.forEach((file) => {
+
+    files.forEach(file => {
       const filePath = path.join(uploadsDir, file);
       try {
         const stat = fs.statSync(filePath);
-        if ((now - stat.mtimeMs) > maxAge) {
+        if (now - stat.mtimeMs > maxAge) {
           fs.unlinkSync(filePath);
-          console.log('Deleted old upload:', filePath);
+          console.log("🗑 Deleted old upload:", file);
         }
-      } catch (e) {
-        console.error('Error checking upload file:', filePath, e.message);
+      } catch (err) {
+        console.error("Error checking file:", err.message);
       }
     });
+
   } catch (err) {
-    console.error('Failed to cleanup uploads:', err.message);
+    console.error("Upload cleanup failed:", err.message);
   }
 }
 
-// Run cleanup on startup and schedule daily
+// run cleanup at startup
 cleanupUploads(30);
+
+// run daily
 setInterval(() => cleanupUploads(30), 24 * 60 * 60 * 1000);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Server is running' });
-});
 
-// Error handling middleware
+// ======================
+// GLOBAL ERROR HANDLER
+// ======================
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Internal server error' });
+  console.error("🔥 Server error:", err.stack);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error"
+  });
 });
 
+
+// ======================
+// SERVER START
+// ======================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
